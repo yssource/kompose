@@ -1,10 +1,3 @@
----
-layout: default
-permalink: /architecture/
-redirect_from: 
-  - /docs/architecture.md/
----
-
 # Architecture and Internal Design
 
 * TOC
