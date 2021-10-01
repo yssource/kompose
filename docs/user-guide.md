@@ -165,10 +165,12 @@ The currently supported options are:
 | Key                  | Value                               |
 |----------------------|-------------------------------------|
 | kompose.service.type | nodeport / clusterip / loadbalancer / headless |
+| kompose.service.group | name to group the containers contained in a single pod |
 | kompose.service.expose | true / hostnames (separated by comma) |
 | kompose.service.nodeport.port | port value (string) | 
 | kompose.service.expose.tls-secret | secret name |
 | kompose.volume.size | kubernetes supported volume size |
+| kompose.volume.storage-class-name | kubernetes supported volume storageClassName |
 | kompose.controller.type | deployment / daemonset / replicationcontroller |
 | kompose.image-pull-policy | kubernetes pods imagePullPolicy |
 | kompose.image-pull-secret | kubernetes secret name for imagePullSecrets |
@@ -202,6 +204,28 @@ services:
       kompose.service.type: nodeport
 ```
 
+ - `kompose.service.group` defines the group of containers included in a single pod.
+
+For example:
+
+```yaml
+version: "3"
+
+services:
+  nginx:
+    image: nginx
+    depends_on:
+      - logs
+    labels: 
+      - kompose.service.group=sidecar
+
+  logs:
+    image: busybox
+    command: ["tail -f /var/log/nginx/access.log"]
+    labels: 
+      - kompose.service.group=sidecar
+```
+
 - `kompose.service.expose` defines if the service needs to be made accessible from outside the cluster or not. If the value is set to "true", the provider sets the endpoint automatically, and for any other value, the value is set as the hostname. If multiple ports are defined in a service, the first one is chosen to be the exposed.
     - For the Kubernetes provider, an ingress resource is created and it is assumed that an ingress controller has already been configured. If the value is set to a comma sepatated list, multiple hostnames are supported.Hostname with path is also supported.
     - For the OpenShift provider, a route is created.
@@ -228,6 +252,19 @@ services:
      - "6379"
 ```
 
+- `kompose.serviceaccount-name` defines the service account name to provide the credential info of the pod.
+
+For example:
+
+```yaml
+version: '3.4'
+services:
+  app:
+    image: python
+    labels:
+      kompose.serviceaccount-name: "my-service"
+```
+
 - `kompose.image-pull-secret` defines a kubernetes secret name for imagePullSecrets podspec field.
 This secret will be used for pulling private images.
 For example:
@@ -241,7 +278,8 @@ services:
       kompose.image-pull-secret: "example-kubernetes-secret"
 ```
 
-- `kompose.volume.size` defines the requests storage's size in the PersistentVolumeClaim
+- `kompose.volume.size` defines the requests storage's size in the PersistentVolumeClaim, or you can use command line parameter `--pvc-request-size`. 
+The priority follow label (kompose.volume.size) > command parameter(--pvc-request-size) > defaultSize (100Mi)
 
 For example:
 
@@ -252,6 +290,21 @@ services:
     image: postgres:10.1
     labels:
       kompose.volume.size: 1Gi
+    volumes:
+      - db-data:/var/lib/postgresql/data
+```
+
+- `kompose.volume.storage-class-name` defines the requests storage's class name in the PersistentVolumeClaim.
+
+For example:
+
+```yaml
+version: '3'
+services:
+  db:
+    image: postgres:10.1
+    labels:
+      kompose.volume.storage-class-name: custom-storage-class-name
     volumes:
       - db-data:/var/lib/postgresql/data
 ```
@@ -372,6 +425,28 @@ If the Docker Compose file has a volume specified for a service, the Deployment 
 If the Docker Compose file has service name with `_` or `.` in it (eg.`web_service` or `web.service`), then it will be replaced by `-` and the service name will be renamed accordingly (eg.`web-service`). Kompose does this because "Kubernetes" doesn't allow `_` in object name.
 
 Please note that changing service name might break some `docker-compose` files.
+
+## Build and push image
+
+If the Docker Compose file has `build` or `build:context, build:dockerfile` keys, build will run when `--build` specified.
+
+And Image will push to *docker.io* (default) when `--push-image=true` specified.
+
+It is possible to push to custom registry by specify `--push-image-registry`, which will override the registry from image name. 
+
+### Authentication on registry
+
+Kompose uses the docker authentication from file `$DOCKER_CONFIG/config.json`, `$HOME/.docker/config.json`, and `$HOME/.dockercfg` after `docker login`.
+
+**This only works fine on Linux but macOS would fail when using `"credsStore": "osxkeychain"`.**
+
+However, there is an approach to push successfully on macOS, by not using `osxkeychain` for `credsStore`. To disable `osxkeychain`:
+* remove `credsStore` from `config.json` file, and `docker login` again.
+* for some docker desktop versions, there is a setting `Securely store Docker logins in macOS keychain`, which should be unchecked. Then restart docker desktop if needed, and `docker login` again.
+
+Now `config.json` should contain base64 encoded passwords, then push image should succeed. Working, but not safe though! Use it at your risk.
+
+For Windows, there is also `credsStore` which is `wincred`. Technically it will fail on authentication as macOS does, but you can try the approach above like macOS too.   
 
 ## Docker Compose Versions
 

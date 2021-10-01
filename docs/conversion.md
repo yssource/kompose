@@ -22,7 +22,7 @@ __Glossary:__
 
 | Keys                   | V1 | V2 | V3 | Kubernetes / OpenShift                                      | Notes                                                                                                          |
 |------------------------|----|----|----|-------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
-| build                  | ✓  | ✓  | ✓  |                                                             | Builds/Pushes to Docker repository. See `--build` parameter                                                    |
+| build                  | ✓  | ✓  | ✓  |                                                             | Builds/Pushes to Docker repository. See [user guide on build and push image](https://kompose.io/user-guide/#build-and-push-image) |                                                    |
 | build: context         | ✓  | ✓  | ✓  |                                                             |                                                                                                                |
 | build: dockerfile      | ✓  | ✓  | ✓  |                                                             |                                                                                                                |
 | build: args            | n  | n  | n  |                                                             |                                                                                                                |
@@ -38,7 +38,7 @@ __Glossary:__
 | deploy                 | -  | -  | ✓  |                                                             |                                                                                                                |
 | deploy: mode           | -  | -  | ✓  |                                                             |                                                                                                                |
 | deploy: replicas       | -  | -  | ✓  | Deployment.Spec.Replicas / DeploymentConfig.Spec.Replicas   |                                                                                                                |
-| deploy: placement      | -  | -  | ✓  | Pod.Spec.NodeSelector                                       |                                                                                                                |
+| deploy: placement      | -  | -  | ✓  | Pod.Spec.Affinity                                           |                                                                                                                |
 | deploy: update_config  | -  | -  | ✓  | Workload.Spec.Strategy                                      | Deployment / DeploymentConfig                                                                                                               |
 | deploy: resources      | -  | -  | ✓  | Containers.Resources.Limits.Memory / Containers.Resources.Limits.CPU | Support for memory as well as cpu                                                                     |
 | deploy: restart_policy | -  | -  | ✓  | Pod generation                                              | This generated a Pod, see the [user guide on restart](http://kompose.io/user-guide/#restart)                   |
